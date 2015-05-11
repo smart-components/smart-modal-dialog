@@ -47,6 +47,7 @@
     this.buttonGroup = document.createElement('div');
     this.buttonGroup.classList.add('modal-dialog-button-group');
     this.buttonGroup.setAttribute('smart-bubbles', 'true');
+    this.buttonGroup.setAttribute('smart-bubbles-direction', 'up');
 
     this.container.appendChild(this.messageElement);
     this.container.appendChild(this.buttonGroup);
