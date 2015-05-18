@@ -73,22 +73,33 @@
     this.onCancel = options.onCancel || function() {};
     this.buttonElements = [];
     this.buttonSettings = options.buttonSettings || [];
-    this.messageElement.textContent = this.message.textRaw || '';
-    this.messageElement.setAttribute('data-l10n-id', this.message.textL10nId);
-    this.buttonGroup.innerHTML = '';
-
-    this.messageElement.classList.remove('hidden');
     if (!this.message.textRaw && !this.message.textL10nId) {
       this.messageElement.classList.add('hidden');
+    } else {
+      this.messageElement.classList.remove('hidden');
+      this.messageElement.textContent = this.message.textRaw || '';
+      if (this.message.textL10nId) {
+        this.messageElement.setAttribute('data-l10n-id',
+                                         this.message.textL10nId);
+      }
     }
 
+    this.buttonGroup.innerHTML = '';
+
     // Set up every button
-    this.buttonSettings.forEach(function(buttonSetting, index) {
+    this.buttonSettings.forEach(function buildButton(buttonSetting, index) {
       var button = document.createElement('smart-button');
-      button.setAttribute('type', 'circle-text');
-      button.setAttribute('data-l10n-id', buttonSetting.textL10nId);
+      button.setAttribute('type', buttonSetting.type || 'circle-text');
+      if (buttonSetting.textL10nId) {
+        button.setAttribute('data-l10n-id', buttonSetting.textL10nId);
+      }
       button.textContent = buttonSetting.textRaw || 'OK';
       button.classList.add(buttonSetting.class || 'confirm');
+      if (buttonSetting.icon) {
+        button.style.backgroundImage = 'url(' + buttonSetting.icon + ')';
+      } else if (buttonSetting.iconFont) {
+        button.dataset.icon = buttonSetting.iconFont;
+      }
       button.addEventListener('click', function() {
         // Click action will be handled in closed event
         this._clickedIndex = index;
