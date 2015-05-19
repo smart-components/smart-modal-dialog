@@ -31,6 +31,11 @@
   <script src="../bower_components/smart-button/script.js" type="text/javascript"></script>
   <script src="../bower_components/smart-dialog/script.js" type="text/javascript"></script>
   <script src="../script.js" type="text/javascript"></script>
+  <style>
+    smart-button {
+      background-size: auto auto;
+    }
+  </style>
 </head>
 <body role="application">
   <button onclick="openDialog()">Open</button>
@@ -44,6 +49,7 @@
           },
           buttonSettings: [
             {
+              icon: 'example.jpg',
               textRaw: 'Bad',
               onClick: function() {
                 alert('I feel bad today!');

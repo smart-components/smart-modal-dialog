@@ -28,6 +28,7 @@
 
     this.smartBubble = document.createElement('smart-bubbles');
 
+    // smart-dialog helps us to handle ESC key to close the dialog.
     this.element = document.createElement('smart-dialog');
     this.element.classList.add('modal-dialog');
     // make dialog focusable in order to catch focus from mouse click or touch
@@ -68,40 +69,64 @@
     this._focusedIndex = -1;
     this.isOpened = true;
     this.message = options.message || {};
+    var renderedCallback = options.onButtonRendered;
 
     // onCancel is triggered when ESC key is pressed.
     this.onCancel = options.onCancel || function() {};
     this.buttonElements = [];
     this.buttonSettings = options.buttonSettings || [];
-    this.messageElement.textContent = this.message.textRaw || '';
-    this.messageElement.setAttribute('data-l10n-id', this.message.textL10nId);
-    this.buttonGroup.innerHTML = '';
-
-    this.messageElement.classList.remove('hidden');
     if (!this.message.textRaw && !this.message.textL10nId) {
       this.messageElement.classList.add('hidden');
+    } else {
+      this.messageElement.classList.remove('hidden');
+      this.messageElement.textContent = this.message.textRaw || '';
+      if (this.message.textL10nId) {
+        this.messageElement.setAttribute('data-l10n-id',
+                                         this.message.textL10nId);
+      }
     }
 
+    this.buttonGroup.innerHTML = '';
+
     // Set up every button
-    this.buttonSettings.forEach(function(buttonSetting, index) {
+    this.buttonSettings.forEach(function buildButton(buttonSetting, index) {
       var button = document.createElement('smart-button');
-      button.setAttribute('type', 'circle-text');
-      button.setAttribute('data-l10n-id', buttonSetting.textL10nId);
+      button.setAttribute('type', buttonSetting.type || 'circle-text');
+      if (buttonSetting.textL10nId) {
+        button.setAttribute('data-l10n-id', buttonSetting.textL10nId);
+      }
       button.textContent = buttonSetting.textRaw || 'OK';
       button.classList.add(buttonSetting.class || 'confirm');
+      if (buttonSetting.icon) {
+        button.style.backgroundImage = 'url(' + buttonSetting.icon + ')';
+      } else if (buttonSetting.iconFont) {
+        button.dataset.icon = buttonSetting.iconFont;
+      }
       button.addEventListener('click', function() {
         // Click action will be handled in closed event
         this._clickedIndex = index;
         this.element.close();
+        this.element.focus();
       }.bind(this));
       this.buttonElements.push(button);
       this.buttonGroup.appendChild(button);
       this._focusedIndex =
                     (buttonSetting.defaultFocus) ? index : this._focusedIndex;
+      if (renderedCallback) {
+        // We add render callback to let user to do more complex visual
+        // modifications.
+        renderedCallback(button, buttonSetting);
+      }
     }.bind(this));
 
     this.element.classList.add('visible');
     this.element.open();
+    this.element.focus();
+  };
+
+  proto.close = function() {
+    this.element.close();
+    this.element.focus();
   };
 
   proto.remove = function() {
@@ -119,9 +144,14 @@
   };
 
   proto.focus = function() {
-    var elem = this.buttonElements[this._focusedIndex];
-    if (elem.focus && (typeof elem.focus) === 'function') {
-      elem.focus();
+    if (this.element.classList.contains('opening') ||
+        this.element.classList.contains('closing')) {
+      this.element.focus();
+    } else {
+      var elem = this.buttonElements[this._focusedIndex];
+      if (elem.focus && (typeof elem.focus) === 'function') {
+        elem.focus();
+      }
     }
   };
 
@@ -170,7 +200,8 @@
           this.element.classList.remove('visible');
           if ((this._clickedIndex || this._clickedIndex === 0) &&
               this.buttonSettings[this._clickedIndex].onClick) {
-            this.buttonSettings[this._clickedIndex].onClick();
+            this.buttonSettings[this._clickedIndex].onClick(
+              this.buttonSettings[this._clickedIndex]);
             this._clickedIndex = null;
           } else if (this.onCancel) {
             // ESC key enter
@@ -178,17 +209,27 @@
           }
           this.isOpened = false;
           this.stopKeyNavigation();
+          this.fireEvent('modal-dialog-closed');
         }
         break;
       case this.smartBubble:
         this.startKeyNavigation();
         this.focus();
+        this.fireEvent('modal-dialog-opened');
         break;
     }
   };
+
+  proto.fireEvent = function smd_fireEvent(event, detail) {
+    var evtObject = new CustomEvent(event, {
+                                      bubbles: true,
+                                      detail: detail || this
+                                    });
+    this.container.dispatchEvent(evtObject);
+  };
+
 
   SmartModalDialog.prototype = proto;
   exports.SmartModalDialog = SmartModalDialog;
 
 })(window);
-
