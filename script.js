@@ -65,9 +65,7 @@
 
   var proto = Object.create(SmartDialog);
 
-  proto.open = function(options) {
-    this._focusedIndex = -1;
-    this.isOpened = true;
+  proto._open = function(options) {
     this.message = options.message || {};
     var renderedCallback = options.onButtonRendered;
 
@@ -122,6 +120,18 @@
     this.element.classList.add('visible');
     this.element.open();
     this.element.focus();
+  };
+
+  proto.open = function(options) {
+    if (this.isOpened) {
+      return;
+    }
+    this._focusedIndex = -1;
+    this.isOpened = true;
+    // We should wait two frames for reflow.
+    window.requestAnimationFrame(function() {
+      window.requestAnimationFrame(this._open.bind(this, options));
+    }.bind(this));
   };
 
   proto.close = function() {
