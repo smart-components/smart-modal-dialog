@@ -70,6 +70,14 @@
 
   var proto = Object.create(SmartDialog);
 
+  proto._setL10n = function(element, l10n) {
+    if ((typeof l10n) === 'string') {
+      element.setAttribute('data-l10n-id', l10n);
+    } else if (navigator.mozL10n) {
+      navigator.mozL10n.setAttributes(element, l10n.id, l10n.args);
+    }
+  };
+
   proto._open = function(options) {
     this.message = options.message || {};
     var renderedCallback = options.onButtonRendered;
@@ -84,8 +92,7 @@
       this.messageElement.classList.remove('hidden');
       this.messageElement.textContent = this.message.textRaw || '';
       if (this.message.textL10nId) {
-        this.messageElement.setAttribute('data-l10n-id',
-                                         this.message.textL10nId);
+        this._setL10n(this.messageElement, this.message.textL10nId);
       }
     }
 
@@ -95,10 +102,10 @@
     this.buttonSettings.forEach(function buildButton(buttonSetting, index) {
       var button = document.createElement('smart-button');
       button.setAttribute('type', buttonSetting.type || 'circle-text');
-      if (buttonSetting.textL10nId) {
-        button.setAttribute('data-l10n-id', buttonSetting.textL10nId);
-      }
       button.textContent = buttonSetting.textRaw || 'OK';
+      if (buttonSetting.textL10nId) {
+        this._setL10n(button, buttonSetting.textL10nId);
+      }
       button.classList.add(buttonSetting.class || 'confirm');
       if (buttonSetting.icon) {
         button.style.backgroundImage = 'url(' + buttonSetting.icon + ')';
