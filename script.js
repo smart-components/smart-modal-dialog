@@ -73,6 +73,8 @@
     this.container = container || document.body;
     this.container.appendChild(this.element);
 
+    this.element.addEventListener('will-open', this);
+    this.element.addEventListener('will-close', this);
     this.element.addEventListener('opened', this);
     this.element.addEventListener('closed', this);
     this.smartBubble.addEventListener('all-items-bubbled', this);
@@ -347,7 +349,9 @@
 
     switch(e.target) {
       case this.element:
-        if (e.type === 'opened') {
+        if (e.type === 'will-open' || e.type === 'will-close') {
+          this.fireEvent('modal-dialog-' + e.type);
+        } else if (e.type === 'opened') {
           this._scrollTo(this.buttonElements[0]);
           // Play bubble animation when the smart-dialog is opened
           this.smartBubble.play(this.buttonElements);
