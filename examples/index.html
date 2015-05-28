@@ -41,11 +41,20 @@
   <button onclick="openDialog()">Open</button>
   <script>
     var dialog = new SmartModalDialog();
+    var customContainer = document.createElement('div');
+    var heading = document.createElement('h1');
+    heading.textContent = 'I have some custom elements for you';
+    customContainer.appendChild(heading);
     function openDialog() {
       dialog.open(
         {
           message: {
             textRaw: 'How are you today?'
+          },
+          customElementSettings: {
+            element: customContainer,
+            focusable: false,
+            defaultFocus: false
           },
           buttonSettings: [
             {
