@@ -38,9 +38,8 @@
 
   var proto = Object.create(SmartModalDialog.prototype);
 
-  proto._init = function() {
-    this.defaultFocusIndex = [-1, -1];
-
+  proto._render = function() {
+    SmartModalDialog.prototype._render.call(this);
     this.textInput = document.createElement('input');
     this.textInput.addEventListener('keydown', function(e) {
       if (e.keyCode === KeyEvent.DOM_VK_RIGHT) {
@@ -70,6 +69,11 @@
     this.smartInputGroup.appendChild(this.focusBar);
 
     this.messageContainer.appendChild(this.smartInputGroup);
+  };
+
+  proto._init = function() {
+    this.defaultFocusIndex = [-1, -1];
+    SmartModalDialog.prototype._init.call(this);
   };
 
   proto._createMessageGroup = function(options) {
@@ -171,6 +175,7 @@
   };
 
   proto._open = function(options) {
+    this._focusedIndex = this.defaultFocusIndex;
     this._createMessageGroup(options);
     this._createCustomGroup(options);
     this._createInputGroup(options);
