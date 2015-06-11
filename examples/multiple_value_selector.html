@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Multiple Value Selector Demo</title>
+  <meta name="description" content="Demo app for Multiple Value Selector" />
+  <style type="text/css">
+    html,
+    body {
+      margin: 0;
+      padding: 10rem;
+      font-size: 10px;
+      background-color: gray;
+    }
+
+    button {
+      padding: 2rem;
+      font-size: 3.6rem;
+      border-radius: 1rem;
+    }
+
+  </style>
+  <link rel="stylesheet" type="text/css" href="../bower_components/smart-icons/smart-icons-embedded.css">
+  <link rel="stylesheet" type="text/css" href="../bower_components/smart-bubbles/style.css">
+  <link rel="stylesheet" type="text/css" href="../bower_components/smart-button/style.css">
+  <link rel="stylesheet" type="text/css" href="../bower_components/smart-dialog/style.css">
+  <link rel="stylesheet" type="text/css" href="../style.css">
+  <link rel="stylesheet" type="text/css" href="../multiple-value-selector.css">
+  <script src="../bower_components/smart-bubbles/script.js" type="text/javascript"></script>
+  <script src="../bower_components/smart-button/script.js" type="text/javascript"></script>
+  <script src="../bower_components/smart-dialog/script.js" type="text/javascript"></script>
+  <script src="../base-modal-dialog.js" type="text/javascript"></script>
+  <script src="../multiple-value-selector.js" type="text/javascript"></script>
+</head>
+<body role="application">
+  <button onclick="openMultipleValueSelector()">Open</button>
+  <script>
+    var dialog = new MultipleValueSelector();
+    var customContainer = document.createElement('div');
+    function openMultipleValueSelector() {
+      dialog.open(
+        {
+          list: [{
+            textRaw: 'item 1'
+          }, {
+            textRaw: 'item 2'
+          }, {
+            textRaw: 'item 3'
+          }, {
+            textRaw: 'item 4'
+          }, {
+            textRaw: 'item 5'
+          }, {
+            textRaw: 'item 6'
+          }, {
+            textRaw: 'item 7'
+          }, {
+            textRaw: 'item 8'
+          }, {
+            textRaw: 'item 9'
+          }],
+          onSelected: function(item) {
+            alert('selected item: ' + JSON.stringify(item));
+          },
+          onCancel: function() {
+            alert('cancel');
+          }
+        }
+      );
+    }
+  </script>
+</body>
+</html>

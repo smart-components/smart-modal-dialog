@@ -26,29 +26,29 @@
 
   function SmartModalDialog(container, options) {
     // Determine whether this dialog is opened or not
-    this.isOpened = false;
     this._clickedIndex = null;
     this.defaultFocusIndex = -1;
 
     this._margin = options && options.margin ? options.margin : DEFAULT_MARGIN;
     this._translateX = 0;
 
+    BaseModalDialog.call(this, container);
+  }
+
+  var proto = Object.create(BaseModalDialog.prototype);
+
+  proto._init = function() {
+    this._render();
+
     this.smartBubble = document.createElement('smart-bubbles');
+    this.element.addEventListener('will-open', this);
+    this.element.addEventListener('will-close', this);
+    this.element.addEventListener('opened', this);
+    this.element.addEventListener('closed', this);
+    this.smartBubble.addEventListener('all-items-bubbled', this);
+  };
 
-    // smart-dialog helps us to handle ESC key to close the dialog.
-    this.element = document.createElement('smart-dialog');
-    this.element.classList.add('modal-dialog');
-    // make dialog focusable in order to catch focus from mouse click or touch
-    // event.
-    this.element.setAttribute('tabIndex', '-1');
-
-    // in order to make vertical align, we need additional container
-    this.outerContainer = document.createElement('div');
-    this.outerContainer.classList.add('outer-container');
-
-    this.innerContainer = document.createElement('div');
-    this.innerContainer.classList.add('container');
-
+  proto._render = function() {
     this.messageElement = document.createElement('div');
     this.messageElement.classList.add('modal-dialog-message');
 
@@ -66,39 +66,10 @@
 
     this.innerContainer.appendChild(this.messageContainer);
     this.innerContainer.appendChild(this.buttonGroup);
-
-    this.outerContainer.appendChild(this.innerContainer);
-    this.element.appendChild(this.outerContainer);
-
-    this.container = container || document.body;
-    this.container.appendChild(this.element);
-
-    this.element.addEventListener('will-open', this);
-    this.element.addEventListener('will-close', this);
-    this.element.addEventListener('opened', this);
-    this.element.addEventListener('closed', this);
-    this.smartBubble.addEventListener('all-items-bubbled', this);
-
-    this._init();
-  }
-
-  var proto = Object.create(SmartDialog.prototype);
-
-  proto._init = function(container, options) {
-    // Put your custom init code here.
   };
 
-  proto._setL10n = function(element, l10n) {
-    if ((typeof l10n) === 'string') {
-      element.setAttribute('data-l10n-id', l10n);
-    } else if (navigator.mozL10n) {
-      navigator.mozL10n.setAttributes(element, l10n.id, l10n.args);
-    }
-  };
-
-  proto._open = function(options) {
+  proto._renderMessage = function(options) {
     this.message = options.message || {};
-    var renderedCallback = options.onButtonRendered;
 
     this.customSettings = options.customElementSettings || null;
     if (this.customSettings) {
@@ -111,10 +82,6 @@
       this.customElementGroup.classList.add('hidden');
     }
 
-    // onCancel is triggered when ESC key is pressed.
-    this.onCancel = options.onCancel || function() {};
-    this.buttonElements = [];
-    this.buttonSettings = options.buttonSettings || [];
     if (!this.message.textRaw && !this.message.textL10nId) {
       this.messageElement.classList.add('hidden');
     } else {
@@ -124,7 +91,12 @@
         this._setL10n(this.messageElement, this.message.textL10nId);
       }
     }
+  };
 
+  proto._renderButtons = function(options) {
+    var renderedCallback = options.onButtonRendered;
+    this.buttonElements = [];
+    this.buttonSettings = options.buttonSettings || [];
     this.buttonGroup.innerHTML = '';
 
     // Set up every button
@@ -157,31 +129,13 @@
         renderedCallback(button, buttonSetting);
       }
     }.bind(this));
-
-    this.element.classList.add('visible');
-    this.element.open();
-    this.element.focus();
   };
 
-  proto.open = function(options) {
-    if (this.isOpened) {
-      return;
-    }
-    this.isOpened = true;
+  proto._open = function(options) {
     this._focusedIndex = this.defaultFocusIndex;
-    // We should wait two frames for reflow.
-    window.requestAnimationFrame(function() {
-      window.requestAnimationFrame(this._open.bind(this, options));
-    }.bind(this));
-  };
-
-  proto.close = function() {
-    this.element.close();
-    this.element.focus();
-  };
-
-  proto.remove = function() {
-    this.container.removeChild(this.element);
+    this._renderMessage(options);
+    this._renderButtons(options);
+    BaseModalDialog.prototype._open.call(this, options);
   };
 
   proto.startKeyNavigation = function() {
@@ -247,22 +201,17 @@
     return this.buttonElements[this._focusedIndex];
   };
 
-  proto.focus = function() {
-    if (this.element.classList.contains('opening') ||
-        this.element.classList.contains('closing')) {
-      this.element.focus();
-    } else {
-      var elem = this._getFocusedElement()
-      this._scrollTo(elem);
+  proto._focusContent = function() {
+    var elem = this._getFocusedElement();
+    this._scrollTo(elem);
 
-      // move focus to smart dialog while transition running
-      if (elem.focus && (typeof elem.focus) === 'function') {
-        elem.focus();
-      }
+    // move focus to smart dialog while transition running
+    if (elem.focus && (typeof elem.focus) === 'function') {
+      elem.focus();
     }
   };
 
-  proto.blur = function() {
+  proto._blurContent = function() {
     var elem = this._getFocusedElement();
     if (elem.blur && (typeof elem.blur === 'function')) {
       elem.blur();
@@ -337,15 +286,6 @@
         break;
     }
   };
-
-  proto.fireEvent = function smd_fireEvent(event, detail) {
-    var evtObject = new CustomEvent(event, {
-                                      bubbles: true,
-                                      detail: detail || this
-                                    });
-    this.container.dispatchEvent(evtObject);
-  };
-
 
   SmartModalDialog.prototype = proto;
   exports.SmartModalDialog = SmartModalDialog;
